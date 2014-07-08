@@ -8,11 +8,14 @@ import java.awt.Image;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class GameEngine extends Applet implements Runnable, KeyListener {
 
 	private Player robot;
-	private Image img,currentSprite, character, background, characterJumped, characterDown;
+	private Heliboy hb1, hb2;
+	private Image img, currentSprite, character, background, characterJumped,
+			characterDown, heliboy;
 	private Graphics secondary;
 	private URL base;
 	private static Background bg1, bg2;
@@ -30,7 +33,8 @@ public class GameEngine extends Applet implements Runnable, KeyListener {
 		character = getImage(base, "images/character.png");
 		characterJumped = getImage(base, "images/jump.png");
 		characterDown = getImage(base, "images/down.png");
-		currentSprite=character;
+		currentSprite = character;
+		heliboy = getImage(base, "images/heliboy.png");
 		background = getImage(base, "images/background.png");
 	}
 
@@ -38,6 +42,8 @@ public class GameEngine extends Applet implements Runnable, KeyListener {
 	public void start() {
 		bg1 = new Background(0, 0);
 		bg2 = new Background(2160, 0);
+		hb1 = new Heliboy(340, 360);
+		hb2 = new Heliboy(760, 360);
 		robot = new Player();
 		Thread thread = new Thread(this);
 		thread.start();
@@ -55,16 +61,29 @@ public class GameEngine extends Applet implements Runnable, KeyListener {
 	public void run() {
 		while (true) {
 			robot.update();
+
+			if (robot.isJumping() == false && robot.isDucking() == false)
+				currentSprite = character;
+			else if (robot.isJumping())
+				currentSprite = characterJumped;
+			else if (robot.isDucking())
+				currentSprite = characterDown;
 			
-			if(robot.isJumping()==false && robot.isDucking()==false)
-				currentSprite=character;
-			else if(robot.isJumping())
-				currentSprite=characterJumped;
-			else if(robot.isDucking())
-				currentSprite=characterDown;
+			ArrayList projectiles = robot.getProjectiles();
+			for(int i=0;i<projectiles.size();i++){
+				Projectile p = (Projectile) projectiles.get(i);
+				if(p.isVisible())
+					p.update();
+				else
+					projectiles.remove(i);
+				
+			}
 			
+			hb1.update();
+			hb2.update();
 			bg1.update();
 			bg2.update();
+
 			repaint();
 			try {
 				Thread.sleep(17);
@@ -95,8 +114,18 @@ public class GameEngine extends Applet implements Runnable, KeyListener {
 	public void paint(Graphics g) {
 		g.drawImage(background, bg1.getBgX(), bg1.getBgY(), this);
 		g.drawImage(background, bg2.getBgX(), bg2.getBgY(), this);
+		
+		ArrayList projectiles = robot.getProjectiles();
+		for(int i=0;i<projectiles.size();i++){
+			Projectile p = (Projectile) projectiles.get(i);
+			g.setColor(Color.black);
+			g.fillOval(p.getX(), p.getY(), 8, 8);
+		}
+		
 		g.drawImage(currentSprite, robot.getCenterX() - 61,
 				robot.getCenterY() - 63, this);
+		g.drawImage(heliboy, hb1.getCenterX() - 41, hb1.getCenterY() - 41, this);
+		g.drawImage(heliboy, hb2.getCenterX() - 41, hb2.getCenterY() - 41, this);
 
 	}
 
@@ -104,10 +133,11 @@ public class GameEngine extends Applet implements Runnable, KeyListener {
 	public void keyPressed(KeyEvent e) {
 		switch (e.getKeyCode()) {
 		case KeyEvent.VK_UP:
-			System.out.println("Move up");
+			currentSprite = characterJumped;
+			robot.jump();
 			break;
 		case KeyEvent.VK_DOWN:
-			currentSprite=characterDown;
+			currentSprite = characterDown;
 			robot.setDucking(true);
 			break;
 		case KeyEvent.VK_LEFT:
@@ -118,9 +148,10 @@ public class GameEngine extends Applet implements Runnable, KeyListener {
 			robot.moveRight();
 			robot.setMovingRight(true);
 			break;
-		case KeyEvent.VK_SPACE:
-			currentSprite=characterJumped;
-			robot.jump();
+		
+		case KeyEvent.VK_CONTROL:
+			if(robot.isDucking()==false)
+				robot.shoot();
 			break;
 
 		}
@@ -131,9 +162,10 @@ public class GameEngine extends Applet implements Runnable, KeyListener {
 	public void keyReleased(KeyEvent e) {
 		switch (e.getKeyCode()) {
 		case KeyEvent.VK_UP:
+			System.out.println("Stop JUMP");
 			break;
 		case KeyEvent.VK_DOWN:
-			currentSprite=character;
+			currentSprite = character;
 			robot.setDucking(false);
 			break;
 		case KeyEvent.VK_LEFT:
@@ -144,9 +176,7 @@ public class GameEngine extends Applet implements Runnable, KeyListener {
 			robot.setMovingRight(false);
 			robot.stop();
 			break;
-		case KeyEvent.VK_SPACE:
-			System.out.println("Stop JUMP");
-			break;
+		
 
 		}
 

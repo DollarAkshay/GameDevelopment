@@ -1,5 +1,7 @@
 package Milo;
 
+import java.util.ArrayList;
+
 public class Player {
 
 	final int JUMPSPEED = -15;
@@ -15,6 +17,8 @@ public class Player {
 
 	private int speedX;
 	private int speedY;
+
+	private ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
 
 	private static Background bg1 = GameEngine.getBg1();
 	private static Background bg2 = GameEngine.getBg2();
@@ -141,6 +145,15 @@ public class Player {
 			speedY = JUMPSPEED;
 			jumping = true;
 		}
+	}
+
+	public void shoot() {
+		Projectile p = new Projectile(centerX + 50, centerY - 25);
+		projectiles.add(p);
+	}
+
+	public ArrayList<Projectile> getProjectiles() {
+		return projectiles;
 	}
 
 }
