@@ -1,22 +1,26 @@
 package Milo;
 
+import java.awt.Rectangle;
 import java.util.ArrayList;
 
 public class Player {
 
 	final int JUMPSPEED = -15;
-	final int GROUND = 382;
 	final int MOVESPEED = 5;
 
 	private int centerX = 100;
-	private int centerY = 382;
+	private int centerY = 377;
 	private boolean jumping = false;
 	private boolean movingLeft = false;
 	private boolean movingRight = false;
 	private boolean ducking = false;
+	private boolean readyToFire = true;
 
-	private int speedX;
-	private int speedY;
+	private int speedX = 0;
+	private int speedY = 0;
+	
+	public static Rectangle r1 = new Rectangle(0,0,0,0);
+	public static Rectangle r2 = new Rectangle(0,0,0,0);
 
 	private ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
 
@@ -34,27 +38,20 @@ public class Player {
 			bg2.setSpeedX(-MOVESPEED);
 		}
 
-		// Updates Y Position
-		if (centerY + speedY > 382) {
-			centerY = 382;
-		} else {
-			centerY += speedY;
-		}
+		centerY += speedY;
 
 		// Handles Jumping
 		if (jumping == true) {
 			speedY++;
-			if (centerY + speedY > 382) {
-				centerY = 382;
-				speedY = 0;
-				jumping = false;
-			}
+
 		}
 
 		// Prevents from going out of the screen
 		if (centerX + speedX < 60) {
 			centerX = 60;
 		}
+		r1.setRect(centerX - 34, centerY - 63	, 68, 63);
+		r2.setRect(r1.getX(), r1.getY() + 63, 68, 64);
 
 	}
 
@@ -130,6 +127,14 @@ public class Player {
 		speedX = -MOVESPEED;
 	}
 
+	public boolean isReadyToFire() {
+		return readyToFire;
+	}
+
+	public void setReadyToFire(boolean readyToFire) {
+		this.readyToFire = readyToFire;
+	}
+
 	public void stop() {
 		if (isMovingRight() == false && isMovingLeft() == false)
 			speedX = 0;
@@ -148,8 +153,10 @@ public class Player {
 	}
 
 	public void shoot() {
-		Projectile p = new Projectile(centerX + 50, centerY - 25);
-		projectiles.add(p);
+		if (readyToFire) {
+			Projectile p = new Projectile(centerX + 50, centerY - 25);
+			projectiles.add(p);
+		}
 	}
 
 	public ArrayList<Projectile> getProjectiles() {
